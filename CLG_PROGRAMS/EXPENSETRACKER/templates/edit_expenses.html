@@ -1,0 +1,73 @@
+d:\Ultron\CLG_PROGRAMS\CLG_PROGRAMS\EXPENSETRACKER\templates\edit_expense.html
+{% extends "base.html" %}
+
+{% block title %}Edit Expense - Expense Tracker{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-md-6">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="mb-0">
+                    <i class="bi bi-pencil"></i> Edit Expense
+                </h5>
+            </div>
+            <div class="card-body">
+                <form method="POST">
+                    <div class="mb-3">
+                        <label for="description" class="form-label">Description</label>
+                        <input type="text" class="form-control" id="description" name="description" 
+                               value="{{ expense.description }}" required>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label for="amount" class="form-label">Amount ($)</label>
+                        <input type="number" class="form-control" id="amount" name="amount" 
+                               value="{{ expense.amount }}" step="0.01" min="0" required>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label for="category" class="form-label">Category</label>
+                        <select class="form-select" id="category" name="category" required>
+                            <option value="Food" {% if expense.category == 'Food' %}selected{% endif %}>Food</option>
+                            <option value="Transportation" {% if expense.category == 'Transportation' %}selected{% endif %}>Transportation</option>
+                            <option value="Entertainment" {% if expense.category == 'Entertainment' %}selected{% endif %}>Entertainment</option>
+                            <option value="Shopping" {% if expense.category == 'Shopping' %}selected{% endif %}>Shopping</option>
+                            <option value="Bills" {% if expense.category == 'Bills' %}selected{% endif %}>Bills</option>
+                            <option value="Healthcare" {% if expense.category == 'Healthcare' %}selected{% endif %}>Healthcare</option>
+                            <option value="Education" {% if expense.category == 'Education' %}selected{% endif %}>Education</option>
+                            <option value="Other" {% if expense.category == 'Other' %}selected{% endif %}>Other</option>
+                        </select>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label for="date" class="form-label">Date</label>
+                        <input type="date" class="form-control" id="date" name="date" 
+                               value="{{ expense.date.strftime('%Y-%m-%d') }}" required>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label for="payment_method" class="form-label">Payment Method</label>
+                        <select class="form-select" id="payment_method" name="payment_method" required>
+                            <option value="Cash" {% if expense.payment_method == 'Cash' %}selected{% endif %}>Cash</option>
+                            <option value="Credit Card" {% if expense.payment_method == 'Credit Card' %}selected{% endif %}>Credit Card</option>
+                            <option value="Debit Card" {% if expense.payment_method == 'Debit Card' %}selected{% endif %}>Debit Card</option>
+                            <option value="Bank Transfer" {% if expense.payment_method == 'Bank Transfer' %}selected{% endif %}>Bank Transfer</option>
+                            <option value="Mobile Payment" {% if expense.payment_method == 'Mobile Payment' %}selected{% endif %}>Mobile Payment</option>
+                        </select>
+                    </div>
+                    
+                    <div class="d-grid gap-2">
+                        <button type="submit" class="btn btn-primary">
+                            <i class="bi bi-save"></i> Update Expense
+                        </button>
+                        <a href="{{ url_for('index') }}" class="btn btn-secondary">
+                            <i class="bi bi-arrow-left"></i> Cancel
+                        </a>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

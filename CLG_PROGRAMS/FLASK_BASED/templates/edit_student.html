@@ -1,0 +1,72 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-md-6 col-lg-5">
+        <div class="card p-4">
+
+            <!-- Header -->
+            <div class="text-center mb-4">
+                <i class="bi bi-pencil-square fs-1 text-warning"></i>
+                <h4 class="fw-bold mt-2">Edit Student</h4>
+                <p class="text-muted small mb-0">Update <strong>{{ student.name }}</strong>'s information</p>
+            </div>
+
+            <!-- Edit Student Form — values pre-filled via Jinja2 -->
+            <form method="POST" action="/edit_student/{{ student.id }}">
+
+                <!-- Name -->
+                <div class="mb-3">
+                    <label for="name" class="form-label fw-semibold">Full Name</label>
+                    <div class="input-group">
+                        <span class="input-group-text"><i class="bi bi-person"></i></span>
+                        <input type="text" class="form-control" id="name" name="name"
+                               value="{{ student.name }}">
+                    </div>
+                </div>
+
+                <!-- Email -->
+                <div class="mb-3">
+                    <label for="email" class="form-label fw-semibold">Email Address</label>
+                    <div class="input-group">
+                        <span class="input-group-text"><i class="bi bi-envelope"></i></span>
+                        <input type="email" class="form-control" id="email" name="email"
+                               value="{{ student.email }}">
+                    </div>
+                </div>
+
+                <!-- Course -->
+                <div class="mb-3">
+                    <label for="course" class="form-label fw-semibold">Course</label>
+                    <div class="input-group">
+                        <span class="input-group-text"><i class="bi bi-book"></i></span>
+                        <input type="text" class="form-control" id="course" name="course"
+                               value="{{ student.course }}">
+                    </div>
+                </div>
+
+                <!-- Phone -->
+                <div class="mb-4">
+                    <label for="phone" class="form-label fw-semibold">Phone Number</label>
+                    <div class="input-group">
+                        <span class="input-group-text"><i class="bi bi-telephone"></i></span>
+                        <input type="tel" class="form-control" id="phone" name="phone"
+                               value="{{ student.phone }}">
+                    </div>
+                </div>
+
+                <!-- Buttons -->
+                <div class="d-flex gap-2">
+                    <a href="/students" class="btn btn-outline-secondary w-50">
+                        <i class="bi bi-arrow-left me-1"></i>Back
+                    </a>
+                    <button type="submit" class="btn btn-warning w-50 text-white">
+                        <i class="bi bi-check-circle me-1"></i>Update Student
+                    </button>
+                </div>
+
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}
