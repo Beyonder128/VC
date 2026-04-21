@@ -1,0 +1,692 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>AudioShare</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Space+Mono:wght@400;700&family=DM+Sans:wght@300;400;500&display=swap');
+
+  :root {
+    --bg: #0a0a0f;
+    --surface: #131318;
+    --surface2: #1c1c24;
+    --accent: #7c6af7;
+    --accent2: #a78bfa;
+    --green: #34d399;
+    --red: #f87171;
+    --amber: #fbbf24;
+    --text: #f1f0ff;
+    --muted: #6b7280;
+    --border: rgba(124,106,247,0.15);
+    --mono: 'Space Mono', monospace;
+    --sans: 'DM Sans', sans-serif;
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: var(--sans);
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: 2rem 1rem 3rem;
+  }
+
+  /* Ambient glow blobs */
+  body::before, body::after {
+    content: '';
+    position: fixed;
+    border-radius: 50%;
+    filter: blur(90px);
+    opacity: 0.12;
+    pointer-events: none;
+    z-index: 0;
+  }
+  body::before {
+    width: 400px; height: 400px;
+    background: var(--accent);
+    top: -100px; left: -100px;
+  }
+  body::after {
+    width: 300px; height: 300px;
+    background: #3b82f6;
+    bottom: -80px; right: -80px;
+  }
+
+  .wrap { position: relative; z-index: 1; width: 100%; max-width: 480px; }
+
+  /* Header */
+  header { text-align: center; margin-bottom: 2.5rem; }
+  .logo {
+    display: inline-flex; align-items: center; gap: 10px;
+    margin-bottom: 0.5rem;
+  }
+  .logo-icon {
+    width: 38px; height: 38px;
+    background: linear-gradient(135deg, var(--accent), #3b82f6);
+    border-radius: 10px;
+    display: flex; align-items: center; justify-content: center;
+  }
+  .logo-icon svg { width: 20px; height: 20px; fill: white; }
+  h1 { font-family: var(--mono); font-size: 1.5rem; letter-spacing: -0.03em; color: var(--text); }
+  .tagline { font-size: 0.875rem; color: var(--muted); font-weight: 300; }
+
+  /* Cards */
+  .card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 16px;
+    padding: 1.25rem 1.5rem;
+    margin-bottom: 1rem;
+  }
+  .card-title {
+    font-family: var(--mono);
+    font-size: 0.7rem;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--muted);
+    margin-bottom: 1rem;
+  }
+
+  /* Status bar */
+  .status-bar {
+    display: flex; align-items: center; justify-content: space-between;
+    flex-wrap: wrap; gap: 0.75rem;
+  }
+  .dot-row { display: flex; align-items: center; gap: 8px; }
+  .dot {
+    width: 8px; height: 8px; border-radius: 50%;
+    background: var(--muted);
+    transition: background 0.3s;
+  }
+  .dot.live { background: var(--green); box-shadow: 0 0 6px var(--green); animation: pulse 1.5s infinite; }
+  .dot.error { background: var(--red); }
+  @keyframes pulse { 0%,100%{opacity:1} 50%{opacity:0.4} }
+
+  .status-text { font-size: 0.875rem; color: var(--muted); }
+  .status-text span { color: var(--text); }
+
+  .client-badges { display: flex; gap: 6px; flex-wrap: wrap; }
+  .badge {
+    font-family: var(--mono); font-size: 0.65rem;
+    padding: 3px 10px; border-radius: 20px;
+    border: 1px solid;
+  }
+  .badge.connected { border-color: var(--green); color: var(--green); background: rgba(52,211,153,0.08); }
+  .badge.waiting   { border-color: var(--amber); color: var(--amber); background: rgba(251,191,36,0.08); }
+  .badge.mode      { border-color: var(--accent2); color: var(--accent2); background: rgba(167,139,250,0.08); }
+
+  /* File path input */
+  .input-row { display: flex; gap: 8px; align-items: stretch; }
+  input[type=text] {
+    flex: 1;
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    color: var(--text);
+    font-family: var(--mono);
+    font-size: 0.8rem;
+    padding: 0.6rem 0.9rem;
+    outline: none;
+    transition: border-color 0.2s;
+  }
+  input[type=text]::placeholder { color: var(--muted); }
+  input[type=text]:focus { border-color: var(--accent); }
+
+  /* Buttons */
+  .btn {
+    font-family: var(--mono); font-size: 0.75rem; letter-spacing: 0.05em;
+    border: 1px solid; border-radius: 10px; cursor: pointer;
+    padding: 0.6rem 1rem;
+    transition: all 0.15s;
+  }
+  .btn:active { transform: scale(0.97); }
+  .btn-play {
+    background: var(--accent); border-color: var(--accent); color: #fff;
+    font-weight: 700;
+  }
+  .btn-play:hover { background: var(--accent2); border-color: var(--accent2); }
+  .btn-play:disabled { opacity: 0.4; cursor: not-allowed; }
+  .btn-play.playing {
+    background: var(--red); border-color: var(--red); color: #fff;
+  }
+  .btn-play.playing:hover { background: rgba(248,113,113,0.9); }
+
+  .btn-stop {
+    background: transparent; border-color: var(--red); color: var(--red);
+  }
+  .btn-stop:hover { background: rgba(248,113,113,0.1); }
+
+  .btn-mic {
+    width: 100%;
+    background: transparent; border-color: var(--accent); color: var(--accent2);
+    padding: 0.75rem;
+    display: flex; align-items: center; justify-content: center; gap: 8px;
+  }
+  .btn-mic:hover { background: rgba(124,106,247,0.1); }
+  .btn-mic.recording {
+    border-color: var(--red); color: var(--red);
+    background: rgba(248,113,113,0.08);
+  }
+
+  .btn-listen {
+    width: 100%;
+    background: linear-gradient(135deg, var(--accent), #3b82f6);
+    border: none; color: #fff;
+    padding: 0.85rem;
+    font-size: 0.85rem; font-weight: 700;
+    display: flex; align-items: center; justify-content: center; gap: 8px;
+  }
+  .btn-listen:hover { opacity: 0.9; }
+  .btn-listen.listening {
+    background: var(--surface2); border: 1px solid var(--green);
+    color: var(--green);
+  }
+
+  /* Volume slider */
+  .vol-row { display: flex; align-items: center; gap: 12px; }
+  .vol-label { font-size: 0.8rem; color: var(--muted); white-space: nowrap; }
+  input[type=range] {
+    flex: 1; height: 4px; appearance: none;
+    background: var(--surface2); border-radius: 2px; outline: none;
+  }
+  input[type=range]::-webkit-slider-thumb {
+    appearance: none; width: 16px; height: 16px;
+    border-radius: 50%; background: var(--accent); cursor: pointer;
+  }
+  .vol-val { font-family: var(--mono); font-size: 0.75rem; color: var(--accent2); min-width: 2.5ch; }
+
+  /* Visualizer */
+  .viz {
+    height: 56px;
+    background: var(--surface2);
+    border-radius: 10px;
+    overflow: hidden;
+    margin-top: 1rem;
+    display: flex; align-items: flex-end; justify-content: center;
+    gap: 3px; padding: 8px;
+  }
+  .bar {
+    width: 5px; border-radius: 3px 3px 0 0;
+    background: var(--accent);
+    opacity: 0.7;
+    transition: height 0.1s;
+    min-height: 4px;
+  }
+
+  /* Log */
+  .log {
+    background: var(--surface2); border-radius: 10px;
+    padding: 0.75rem 1rem;
+    font-family: var(--mono); font-size: 0.7rem;
+    color: var(--muted);
+    max-height: 100px; overflow-y: auto;
+    line-height: 1.8;
+  }
+  .log .ok   { color: var(--green); }
+  .log .err  { color: var(--red); }
+  .log .info { color: var(--accent2); }
+
+  /* Mode tabs */
+  .tabs { display: flex; gap: 6px; margin-bottom: 1rem; }
+  .tab {
+    flex: 1; text-align: center;
+    font-family: var(--mono); font-size: 0.7rem; letter-spacing: 0.06em;
+    padding: 0.5rem; border-radius: 8px; cursor: pointer;
+    border: 1px solid var(--border); color: var(--muted);
+    background: transparent; transition: all 0.15s;
+  }
+  .tab.active {
+    border-color: var(--accent); color: var(--accent2);
+    background: rgba(124,106,247,0.1);
+  }
+
+  .panel { display: none; }
+  .panel.active { display: block; }
+
+  .divider { border: none; border-top: 1px solid var(--border); margin: 1rem 0; }
+  .section-label {
+    font-family: var(--mono); font-size: 0.68rem; letter-spacing: 0.1em;
+    color: var(--muted); margin-bottom: 0.6rem;
+  }
+
+  /* Earphone visual */
+  .earphone-vis {
+    display: flex; justify-content: center; gap: 2rem;
+    margin: 0.5rem 0 1rem;
+  }
+  .ep {
+    display: flex; flex-direction: column; align-items: center; gap: 6px;
+  }
+  .ep-icon {
+    width: 44px; height: 44px; border-radius: 50%;
+    border: 2px solid var(--border);
+    display: flex; align-items: center; justify-content: center;
+    font-size: 20px;
+    transition: all 0.3s;
+  }
+  .ep-icon.active {
+    border-color: var(--green);
+    background: rgba(52,211,153,0.1);
+    box-shadow: 0 0 12px rgba(52,211,153,0.2);
+  }
+  .ep-label { font-size: 0.7rem; color: var(--muted); font-family: var(--mono); }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <header>
+    <div class="logo">
+      <div class="logo-icon">
+        <svg viewBox="0 0 24 24"><path d="M12 3a9 9 0 100 18A9 9 0 0012 3zm-1 13H9V8h2v8zm4 0h-2V8h2v8z"/></svg>
+      </div>
+      <h1>AudioShare</h1>
+    </div>
+    <p class="tagline">stream music to multiple earphones over Wi-Fi</p>
+  </header>
+
+  <!-- Status card -->
+  <div class="card">
+    <div class="card-title">network status</div>
+    <div class="status-bar">
+      <div class="dot-row">
+        <div class="dot" id="dot"></div>
+        <span class="status-text" id="status-text">checking...</span>
+      </div>
+      <div class="client-badges" id="badges">
+        <span class="badge waiting">no clients</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- Earphone visualization -->
+  <div class="card">
+    <div class="card-title">connected listeners</div>
+    <div class="earphone-vis">
+      <div class="ep">
+        <div class="ep-icon" id="ep1">🎧</div>
+        <div class="ep-label">listener 1</div>
+      </div>
+      <div class="ep">
+        <div class="ep-icon" id="ep2">🎧</div>
+        <div class="ep-label">listener 2</div>
+      </div>
+    </div>
+
+    <!-- Visualizer bars -->
+    <div class="viz" id="viz">
+      <div class="bar" id="b0" style="height:8px"></div>
+      <div class="bar" id="b1" style="height:14px"></div>
+      <div class="bar" id="b2" style="height:22px"></div>
+      <div class="bar" id="b3" style="height:30px"></div>
+      <div class="bar" id="b4" style="height:20px"></div>
+      <div class="bar" id="b5" style="height:12px"></div>
+      <div class="bar" id="b6" style="height:18px"></div>
+      <div class="bar" id="b7" style="height:28px"></div>
+      <div class="bar" id="b8" style="height:16px"></div>
+      <div class="bar" id="b9" style="height:10px"></div>
+    </div>
+  </div>
+
+  <!-- Control panel -->
+  <div class="card">
+    <div class="card-title">broadcast controls</div>
+
+    <!-- Tabs -->
+    <div class="tabs">
+      <button class="tab active" onclick="switchTab('file')">FILE</button>
+      <button class="tab" onclick="switchTab('mic')">MIC</button>
+    </div>
+
+    <!-- File panel -->
+    <div class="panel active" id="panel-file">
+      <div class="section-label">audio file path (.mp3 / .wav)</div>
+      <div class="input-row">
+        <input type="text" id="filepath" placeholder="/sdcard/Music/song.mp3">
+        <button class="btn btn-play" id="btn-play" onclick="togglePlayFile()">▶ START BROADCAST</button>
+      </div>
+    </div>
+
+    <!-- Mic panel -->
+    <div class="panel" id="panel-mic">
+      <div class="section-label">broadcast microphone / system audio</div>
+      <button class="btn btn-mic" id="btn-mic" onclick="toggleMic()">
+        🎤 START MIC BROADCAST
+      </button>
+    </div>
+
+    <hr class="divider">
+
+    <!-- Volume & Stop -->
+    <div class="vol-row" style="margin-bottom:1rem">
+      <span class="vol-label">volume</span>
+      <input type="range" id="vol" min="0" max="100" value="80" oninput="setVol(this.value)">
+      <span class="vol-val" id="vol-val">80</span>
+    </div>
+
+    <button class="btn btn-stop" onclick="stopAll()" style="width:100%">■ STOP BROADCAST</button>
+  </div>
+
+  <!-- Listen button (for client devices) -->
+  <div class="card">
+    <div class="card-title">listener mode — earphone device</div>
+    <p style="font-size:0.8rem;color:var(--muted);margin-bottom:1rem;line-height:1.6">
+      Open this page on each earphone device, then tap the button below to start listening.
+    </p>
+    <button class="btn btn-listen" id="btn-listen" onclick="toggleListen()">
+      🎵 START LISTENING
+    </button>
+
+    <div class="vol-row" style="margin-top:1rem">
+      <span class="vol-label">local vol</span>
+      <input type="range" id="lvol" min="0" max="100" value="80" oninput="setLocalVol(this.value)">
+      <span class="vol-val" id="lvol-val">80</span>
+    </div>
+  </div>
+
+  <!-- Log -->
+  <div class="card">
+    <div class="card-title">log</div>
+    <div class="log" id="log">
+      <div class="info">→ server ready. waiting for action…</div>
+    </div>
+  </div>
+
+</div>
+
+<script>
+const SERVER = window.location.origin;
+
+// ── Logging ───────────────────────────────────────────────────────────────
+function log(msg, cls = '') {
+  const el = document.getElementById('log');
+  const d = document.createElement('div');
+  if (cls) d.className = cls;
+  d.textContent = `[${new Date().toLocaleTimeString()}] ${msg}`;
+  el.appendChild(d);
+  el.scrollTop = el.scrollHeight;
+}
+
+// ── Tabs ──────────────────────────────────────────────────────────────────
+function switchTab(name) {
+  document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+  document.querySelectorAll('.panel').forEach(p => p.classList.remove('active'));
+  event.target.classList.add('active');
+  document.getElementById('panel-' + name).classList.add('active');
+}
+
+// ── Fake visualizer (animates when streaming is live) ─────────────────────
+let vizInterval = null;
+function startViz() {
+  if (vizInterval) return;
+  vizInterval = setInterval(() => {
+    for (let i = 0; i < 10; i++) {
+      const h = Math.floor(Math.random() * 44) + 4;
+      document.getElementById('b' + i).style.height = h + 'px';
+    }
+  }, 120);
+}
+function stopViz() {
+  clearInterval(vizInterval); vizInterval = null;
+  for (let i = 0; i < 10; i++)
+    document.getElementById('b' + i).style.height = '4px';
+}
+
+// ── Volume ────────────────────────────────────────────────────────────────
+function setVol(v) { document.getElementById('vol-val').textContent = v; }
+function setLocalVol(v) {
+  document.getElementById('lvol-val').textContent = v;
+  if (audioEl) audioEl.volume = v / 100;
+}
+
+// ── Server API calls ──────────────────────────────────────────────────────
+async function api(path, body = null) {
+  const opts = body
+    ? { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body) }
+    : { method: 'GET' };
+  const r = await fetch(SERVER + path, opts);
+  return r.json();
+}
+
+async function togglePlayFile() {
+  const btn = document.getElementById('btn-play');
+  if (btn.classList.contains('playing')) {
+    // Stop broadcast
+    log('Stopping broadcast...', 'info');
+    await api('/stop', {});
+    btn.classList.remove('playing');
+    btn.textContent = '▶ START BROADCAST';
+    stopViz(); 
+    log('broadcast stopped', 'info');
+  } else {
+    // Start broadcast
+    const path = document.getElementById('filepath').value.trim();
+    if (!path) { log('Enter a file path first', 'err'); return; }
+    log(`Starting broadcast: ${path}`, 'info');
+    const res = await api('/play-file', { path });
+    if (res.error) { log(res.error, 'err'); return; }
+    log(`streaming: ${res.file}`, 'ok');
+    btn.classList.add('playing');
+    btn.textContent = '⏹ STOP BROADCAST';
+    startViz();
+  }
+}
+
+let stream_state = { mode: 'idle' };
+
+let micLive = false;
+async function toggleMic() {
+  const btn = document.getElementById('btn-mic');
+  if (btn.classList.contains('recording')) {
+    log('Stopping mic broadcast...', 'info');
+    await api('/stop', {});
+    btn.classList.remove('recording');
+    btn.textContent = '🎤 START MIC BROADCAST';
+    stopViz(); log('mic broadcast stopped', 'info');
+  } else {
+    log('starting mic broadcast…', 'info');
+    const res = await api('/play-mic', {});
+    if (res.error) { log(res.error, 'err'); return; }
+    btn.classList.add('recording');
+    btn.textContent = '⏹ STOP MIC BROADCAST';
+    startViz(); log('mic broadcast live', 'ok');
+  }
+}
+
+async function stopAll() {
+  log('Stopping all broadcasts...', 'info');
+  await api('/stop', {});
+  
+  const btnPlay = document.getElementById('btn-play');
+  const btnMic = document.getElementById('btn-mic');
+  
+  btnPlay.classList.remove('playing');
+  btnPlay.textContent = '▶ START BROADCAST';
+  
+  btnMic.classList.remove('recording');
+  btnMic.textContent = '🎤 START MIC BROADCAST';
+  
+  stopViz(); 
+  log('all broadcasts stopped', 'info');
+}
+
+// ── Listener (client mode) ────────────────────────────────────────────────
+let audioEl = null;
+let audioContext = null;
+let listening = false;
+let streamFetch = null;
+let streamMonitor = null;
+let lastPlayingState = null;
+
+function toggleListen() {
+  const btn = document.getElementById('btn-listen');
+  if (listening) {
+    stopListening();
+  } else {
+    startListening(btn);
+  }
+}
+
+async function startListening(btn) {
+  try {
+    // Initialize Web Audio API
+    if (!audioContext) {
+      audioContext = new (window.AudioContext || window.webkitAudioContext)();
+    }
+    
+    // Create audio element for simpler playback
+    if (!audioEl) {
+      audioEl = new Audio();
+      audioEl.crossOrigin = "anonymous";
+    }
+    
+    const streamUrl = SERVER + '/audio-stream';
+    audioEl.src = streamUrl;
+    audioEl.volume = document.getElementById('lvol').value / 100;
+    
+    // Add ended event listener to detect stream termination
+    audioEl.onended = function() {
+      if (listening) {
+        log('stream ended (connection closed)', 'info');
+        stopListening();
+      }
+    };
+    
+    // Add error handler
+    audioEl.onerror = function(e) {
+      if (listening) {
+        log('stream error: connection lost', 'err');
+        stopListening();
+      }
+    };
+    
+    // Resume audio context if suspended (required by browsers)
+    if (audioContext.state === 'suspended') {
+      await audioContext.resume();
+    }
+    
+    log('Attempting to connect to stream...', 'info');
+    audioEl.play().then(() => {
+      listening = true;
+      btn.classList.add('listening');
+      btn.textContent = '⏹ STOP LISTENING';
+      startViz();
+      log('connected to stream — listening…', 'ok');
+      
+      // Start stream monitor to detect broadcast end (only stops on actual disconnect signal)
+      if (streamMonitor) clearInterval(streamMonitor);
+      lastPlayingState = null;  // Reset to detect first change
+      streamMonitor = setInterval(async () => {
+        try {
+          const s = await api('/status');
+          
+          // Only take action if we detect a transition from playing to not playing
+          if (lastPlayingState === true && s.playing === false) {
+            // Broadcast was playing and now it's not - stop listening
+            log('broadcast stopped, ending stream', 'info');
+            stopListening();
+          }
+          
+          lastPlayingState = s.playing;
+        } catch (e) {
+          // Server unreachable - stop listening
+          if (listening) {
+            log('server unreachable, ending stream', 'err');
+            stopListening();
+          }
+        }
+      }, 1000);
+      
+    }).catch(e => {
+      log('playback error: ' + e.message, 'err');
+      console.error('Audio playback error:', e);
+    });
+    
+  } catch (e) {
+    log('error initializing audio: ' + e.message, 'err');
+    console.error('Audio init error:', e);
+  }
+}
+
+function stopListening() {
+  const btn = document.getElementById('btn-listen');
+  
+  // Clear monitor interval
+  if (streamMonitor) {
+    clearInterval(streamMonitor);
+    streamMonitor = null;
+  }
+  lastPlayingState = null;
+  
+  if (audioEl) {
+    // Stop playback and clear source
+    audioEl.pause();
+    audioEl.currentTime = 0;
+    audioEl.src = '';
+    // Remove event listeners to prevent recursion
+    audioEl.onended = null;
+    audioEl.onerror = null;
+  }
+  
+  if (streamFetch) {
+    streamFetch.abort();
+    streamFetch = null;
+  }
+  
+  listening = false;
+  btn.classList.remove('listening');
+  btn.textContent = '🎵 START LISTENING';
+  stopViz();
+  log('stopped listening', 'info');
+}
+
+// ── Status polling ────────────────────────────────────────────────────────
+async function pollStatus() {
+  try {
+    const s = await api('/status');
+    stream_state = s;  // Update global state
+    const dot = document.getElementById('dot');
+    const txt = document.getElementById('status-text');
+    const badges = document.getElementById('badges');
+
+    if (s.playing) {
+      dot.className = 'dot live';
+      txt.innerHTML = `streaming <span>${s.filename || s.mode}</span>`;
+    } else {
+      dot.className = 'dot';
+      txt.innerHTML = 'idle';
+    }
+
+    // Update badges
+    const n = s.clients || 0;
+    badges.innerHTML = '';
+    if (s.mode !== 'idle') {
+      const m = document.createElement('span');
+      m.className = 'badge mode';
+      m.textContent = s.mode;
+      badges.appendChild(m);
+    }
+    const cb = document.createElement('span');
+    cb.className = n > 0 ? 'badge connected' : 'badge waiting';
+    cb.textContent = n > 0 ? `${n} listener${n > 1 ? 's' : ''}` : 'no clients';
+    badges.appendChild(cb);
+
+    // Earphone icons
+    document.getElementById('ep1').className = 'ep-icon' + (n >= 1 ? ' active' : '');
+    document.getElementById('ep2').className = 'ep-icon' + (n >= 2 ? ' active' : '');
+  } catch (e) {
+    document.getElementById('dot').className = 'dot error';
+    document.getElementById('status-text').innerHTML = '<span style="color:#f87171">server unreachable</span>';
+  }
+}
+
+setInterval(pollStatus, 1000);
+pollStatus();
+</script>
+</body>
+</html>
