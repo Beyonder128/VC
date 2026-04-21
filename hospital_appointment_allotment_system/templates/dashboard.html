@@ -1,0 +1,90 @@
+{% extends "base.html" %}
+{% block title %}Dashboard — MediBook{% endblock %}
+
+{% block content %}
+
+<!-- Hero -->
+<div class="hero-banner rounded-4 p-5 mb-4 text-white text-center">
+  <h1 class="fw-bold display-5"><i class="bi bi-hospital me-2"></i>MediBook</h1>
+  <p class="lead mb-0">Hospital Appointment Allotment System</p>
+</div>
+
+<!-- Stat cards -->
+<div class="row g-4 mb-4">
+
+  <div class="col-sm-6 col-xl-3">
+    <div class="card stat-card border-0 shadow-sm h-100">
+      <div class="card-body d-flex align-items-center gap-3">
+        <div class="stat-icon bg-primary-subtle text-primary">
+          <i class="bi bi-person-badge fs-3"></i>
+        </div>
+        <div>
+          <div class="fs-2 fw-bold">{{ stats.doctors }}</div>
+          <div class="text-muted small">Registered Doctors</div>
+        </div>
+      </div>
+      <a href="{{ url_for('doctors.list_doctors') }}" class="stretched-link"></a>
+    </div>
+  </div>
+
+  <div class="col-sm-6 col-xl-3">
+    <div class="card stat-card border-0 shadow-sm h-100">
+      <div class="card-body d-flex align-items-center gap-3">
+        <div class="stat-icon bg-success-subtle text-success">
+          <i class="bi bi-people fs-3"></i>
+        </div>
+        <div>
+          <div class="fs-2 fw-bold">{{ stats.patients }}</div>
+          <div class="text-muted small">Registered Patients</div>
+        </div>
+      </div>
+      <a href="{{ url_for('patients.list_patients') }}" class="stretched-link"></a>
+    </div>
+  </div>
+
+  <div class="col-sm-6 col-xl-3">
+    <div class="card stat-card border-0 shadow-sm h-100">
+      <div class="card-body d-flex align-items-center gap-3">
+        <div class="stat-icon bg-warning-subtle text-warning">
+          <i class="bi bi-calendar2-check fs-3"></i>
+        </div>
+        <div>
+          <div class="fs-2 fw-bold">{{ stats.appointments }}</div>
+          <div class="text-muted small">Appointments Booked</div>
+        </div>
+      </div>
+      <a href="{{ url_for('appointments.list_appointments') }}" class="stretched-link"></a>
+    </div>
+  </div>
+
+  <div class="col-sm-6 col-xl-3">
+    <div class="card stat-card border-0 shadow-sm h-100">
+      <div class="card-body d-flex align-items-center gap-3">
+        <div class="stat-icon bg-danger-subtle text-danger">
+          <i class="bi bi-hourglass-split fs-3"></i>
+        </div>
+        <div>
+          <div class="fs-2 fw-bold">{{ stats.waiting }}</div>
+          <div class="text-muted small">On Waiting List</div>
+        </div>
+      </div>
+      <a href="{{ url_for('appointments.list_appointments') }}" class="stretched-link"></a>
+    </div>
+  </div>
+
+</div>
+
+<!-- Quick actions -->
+<div class="card border-0 shadow-sm">
+  <div class="card-header bg-white fw-semibold">
+    <i class="bi bi-lightning-charge me-1 text-warning"></i>Quick Actions
+  </div>
+  <div class="card-body d-flex flex-wrap gap-2">
+    <a href="{{ url_for('doctors.list_doctors') }}"      class="btn btn-outline-primary"><i class="bi bi-plus me-1"></i>Add Doctor</a>
+    <a href="{{ url_for('patients.list_patients') }}"    class="btn btn-outline-success"><i class="bi bi-plus me-1"></i>Add Patient</a>
+    <a href="{{ url_for('appointments.book') }}"         class="btn btn-warning text-dark fw-semibold"><i class="bi bi-calendar-plus me-1"></i>Book Appointment</a>
+    <a href="{{ url_for('appointments.list_appointments') }}" class="btn btn-outline-secondary"><i class="bi bi-list-ul me-1"></i>View All Appointments</a>
+  </div>
+</div>
+
+{% endblock %}
