@@ -1,0 +1,170 @@
+{% extends "base.html" %}
+{% block title %}Book Appointment — MediBook{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+  <div class="col-lg-6">
+
+    <div class="card border-0 shadow-sm">
+      <div class="card-header bg-success text-white fw-semibold">
+        <i class="bi bi-calendar-plus me-1"></i>Book an Appointment
+      </div>
+      <div class="card-body">
+
+        <!-- Booking as info strip -->
+        <div class="alert alert-success py-2 small mb-3">
+          <i class="bi bi-person-heart me-1"></i>
+          Booking as: <strong>{{ patient.name }}</strong> (Age {{ patient.age }})
+        </div>
+
+        <form method="POST" action="{{ url_for('appointments.book') }}" novalidate>
+
+          <!-- Specialization filter (client-side, filters doctor dropdown) -->
+          <div class="mb-3">
+            <label class="form-label fw-semibold">Filter by Specialization</label>
+            <select id="specFilter" class="form-select" onchange="filterDoctors()">
+              <option value="">— All Specializations —</option>
+              {% for s in specializations %}
+              <option value="{{ s }}">{{ s }}</option>
+              {% endfor %}
+            </select>
+          </div>
+
+          <!-- Doctor dropdown -->
+          <div class="mb-3">
+            <label class="form-label fw-semibold">Select Doctor</label>
+            <select name="doctor_id" id="doctorSelect" class="form-select" required onchange="loadSlots()">
+              <option value="">— Choose a doctor —</option>
+              {% for doc in doctors %}
+              <option value="{{ doc.id }}" data-spec="{{ doc.specialization }}">
+                {{ doc.name }} — {{ doc.specialization }}
+              </option>
+              {% endfor %}
+            </select>
+          </div>
+
+          <!-- Date picker -->
+          <div class="mb-3">
+            <label class="form-label fw-semibold">Appointment Date</label>
+            <input type="date" name="appt_date" id="dateInput"
+                   class="form-control" required onchange="loadSlots()"/>
+            <div id="futureDateWarning" class="alert alert-warning mt-2 py-2 small d-none">
+              <i class="bi bi-clock-history me-1"></i>
+              Date is <strong>more than 2 days ahead</strong> — booking will go to the waiting list
+              and requires <strong>doctor approval</strong>.
+            </div>
+          </div>
+
+          <!-- Time slot — loaded dynamically -->
+          <div class="mb-4">
+            <label class="form-label fw-semibold">
+              Available Time Slot
+              <span id="slotSpinner" class="spinner-border spinner-border-sm text-success ms-2 d-none"></span>
+            </label>
+            <select name="time_slot" id="slotSelect" class="form-select" required disabled>
+              <option value="">— Select doctor &amp; date first —</option>
+            </select>
+            <div id="noSlotMsg" class="form-text text-danger d-none">
+              <i class="bi bi-exclamation-circle me-1"></i>
+              All slots booked — you'll be added to the waiting list.
+            </div>
+          </div>
+
+          <button type="submit" class="btn btn-success fw-semibold w-100">
+            <i class="bi bi-check-circle me-1"></i>Confirm Booking
+          </button>
+        </form>
+      </div>
+    </div>
+
+    <div class="alert alert-info mt-3 small">
+      <i class="bi bi-info-circle me-1"></i>
+      <strong>Booking rules:</strong>
+      <ul class="mb-0 mt-1">
+        <li>Slot already taken → you join the <strong>waiting list</strong> (auto-promoted on cancellation)</li>
+        <li>Date &gt; today + 2 days → waiting list, <strong>doctor must approve</strong></li>
+      </ul>
+    </div>
+
+  </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+  const doctorSelect      = document.getElementById("doctorSelect");
+  const dateInput         = document.getElementById("dateInput");
+  const slotSelect        = document.getElementById("slotSelect");
+  const spinner           = document.getElementById("slotSpinner");
+  const noSlotMsg         = document.getElementById("noSlotMsg");
+  const futureDateWarning = document.getElementById("futureDateWarning");
+  const specFilter        = document.getElementById("specFilter");
+
+  // Min date = today
+  dateInput.setAttribute("min", new Date().toISOString().split("T")[0]);
+
+  function isFutureDate(dateStr) {
+    const diff = (new Date(dateStr) - new Date().setHours(0,0,0,0)) / 86400000;
+    return diff > 2;
+  }
+
+  function filterDoctors() {
+    const spec = specFilter.value;
+    Array.from(doctorSelect.options).forEach(opt => {
+      if (!opt.value) return;  // keep placeholder
+      opt.hidden = spec ? opt.dataset.spec !== spec : false;
+    });
+    // Reset if current selection is now hidden
+    if (doctorSelect.selectedOptions[0]?.hidden) {
+      doctorSelect.value = "";
+      resetSlots();
+    }
+  }
+
+  function resetSlots() {
+    slotSelect.innerHTML = '<option value="">— Select doctor &amp; date first —</option>';
+    slotSelect.disabled  = true;
+    noSlotMsg.classList.add("d-none");
+    futureDateWarning.classList.add("d-none");
+  }
+
+  async function loadSlots() {
+    const doctorId = doctorSelect.value;
+    const dateVal  = dateInput.value;
+
+    if (!doctorId || !dateVal) { resetSlots(); return; }
+
+    futureDateWarning.classList.toggle("d-none", !isFutureDate(dateVal));
+
+    slotSelect.innerHTML = '<option value="">Loading…</option>';
+    slotSelect.disabled  = true;
+    noSlotMsg.classList.add("d-none");
+    spinner.classList.remove("d-none");
+
+    try {
+      const slots = await fetch(`/api/slots/${doctorId}?date=${dateVal}`).then(r => r.json());
+      const allSlots = [
+        "09:00 AM","09:30 AM","10:00 AM","10:30 AM",
+        "11:00 AM","11:30 AM","12:00 PM","02:00 PM",
+        "02:30 PM","03:00 PM","03:30 PM","04:00 PM"
+      ];
+
+      slotSelect.innerHTML = "";
+
+      if (slots.length === 0) {
+        noSlotMsg.classList.remove("d-none");
+        slotSelect.add(new Option("— All slots booked (waiting list) —", ""));
+        allSlots.forEach(s => slotSelect.add(new Option(s + " ⏳", s)));
+      } else {
+        slotSelect.add(new Option("— Pick a slot —", ""));
+        slots.forEach(s => slotSelect.add(new Option(s, s)));
+      }
+      slotSelect.disabled = false;
+    } catch {
+      slotSelect.innerHTML = '<option value="">Error loading slots</option>';
+    } finally {
+      spinner.classList.add("d-none");
+    }
+  }
+</script>
+{% endblock %}
