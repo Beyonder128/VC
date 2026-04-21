@@ -1,82 +1,238 @@
-# chatbot.py — Using Gemma (no system_instruction support)
+# 🏥 Hospital Appointment Dashboard System
 
-import os
-from google import genai
-from google.genai import types
-from dotenv import load_dotenv
+A **Flask-based Hospital Appointment Allotment System** designed to manage doctors, patients, and appointment scheduling efficiently through a clean web dashboard.
 
-load_dotenv()
-API_KEY = os.getenv('GEMINI_API_KEY')
-if not API_KEY:
-    raise ValueError('GEMINI_API_KEY not found.')
+This project focuses on **real-world scheduling logic**, ensuring that appointment conflicts are avoided while maintaining a simple and scalable architecture.
 
-client = genai.Client(api_key=API_KEY)
+---
 
-# Use a Gemma model (from your list)
-MODEL_NAME = 'models/gemma-3-4b-it'   # or gemma-3-12b-it, etc.
+## 🎯 Project Overview
 
-# System prompt will be injected as a fake user message at start
-SYSTEM_PROMPT = '''You are a helpful, friendly, and concise AI assistant.
-You answer questions clearly and ask for clarification when needed.
-Keep responses under 200 words unless a longer answer is necessary.'''
+This system allows hospitals or clinics to:
 
-history = []
+* Manage doctor records and specializations
+* Register and manage patients
+* Book appointments through a centralized dashboard
+* Prevent double-booking of doctors
+* View all scheduled appointments in a structured format
 
-# Initialize history with system prompt (as a user message)
-history.append(types.Content(
-    role="user",
-    parts=[types.Part.from_text(text=f"System: {SYSTEM_PROMPT}\n\nPlease follow these instructions.")]
-))
-# Add a dummy assistant acknowledgment (optional)
-history.append(types.Content(
-    role="model",
-    parts=[types.Part.from_text(text="Understood. I will follow those guidelines.")]
-))
+The application is built using **Flask, SQLite, Bootstrap 5, and Jinja2**, following a modular and maintainable design.
 
-def chat(user_input: str) -> str:
-    global history
+---
 
-    # Add real user message
-    history.append(types.Content(
-        role="user",
-        parts=[types.Part.from_text(text=user_input)]
-    ))
+## 🚀 Key Features
 
-    # Generate response (no system_instruction in config)
-    response = client.models.generate_content(
-        model=MODEL_NAME,
-        contents=history,
-        config=types.GenerateContentConfig(temperature=0.7)  # no system_instruction
-    )
+### ✅ Core Functionalities
 
-    reply = response.text
+* 👨‍⚕️ Add and manage doctors
+* 🧑‍🤝‍🧑 Add and manage patients
+* 📅 Book appointments via dashboard
+* ❌ Prevent overlapping appointments for the same doctor
+* 📋 View all appointments in a tabular dashboard
 
-    # Add assistant response
-    history.append(types.Content(
-        role="model",
-        parts=[types.Part.from_text(text=reply)]
-    ))
+---
 
-    return reply
+### 🔥 Advanced Features (Planned / Extendable)
 
-def main():
-    print('=' * 50)
-    print(' Gemini AI Chatbot (Gemma) | Type exit to quit')
-    print('=' * 50)
-    while True:
-        user_input = input('You: ').strip()
-        if not user_input:
-            continue
-        if user_input.lower() in ('exit', 'quit', 'bye'):
-            print('Bot: Goodbye! Have a great day.')
-            break
-        try:
-            reply = chat(user_input)
-            print(f'Bot: {reply}\n')
-        except Exception as e:
-            print(f'Bot: [Error] {e}\n')
+* Smart slot availability display
+* Doctor filtering by specialization
+* Appointment cancellation & rescheduling
+* Waiting list / queue system
+* Role-based authentication (Admin login)
 
-if __name__ == '__main__':
-    main()
-    
-AlzaSyDMiUpneu7tk6IQIX4DZQXZSUv3tRVL92Q
+---
+
+## 🏗️ Project Structure
+
+```bash
+hospital_app/
+│
+├── app.py                 # Main Flask app
+├── models.py              # Database connection & queries
+├── database.db            # SQLite database
+│
+├── routes/                # Blueprint modules
+│   ├── doctor_routes.py
+│   ├── patient_routes.py
+│   └── appointment_routes.py
+│
+├── templates/             # Jinja2 templates
+│   ├── base.html
+│   ├── dashboard.html
+│   ├── doctors.html
+│   ├── patients.html
+│   ├── book.html
+│
+├── static/
+│   └── styles.css         # Custom styling
+```
+
+---
+
+## 🧠 Tech Stack
+
+| Layer      | Technology        |
+| ---------- | ----------------- |
+| Backend    | Flask (Python)    |
+| Database   | SQLite            |
+| Frontend   | HTML, Bootstrap 5 |
+| Templating | Jinja2            |
+
+---
+
+## ⚙️ Setup Instructions
+
+### 1️⃣ Clone the Repository
+
+```bash
+git clone https://github.com/Beyonder128/VC.git
+cd VC
+git checkout DOC-Appointment-Dashboard
+```
+
+---
+
+### 2️⃣ Create Virtual Environment
+
+```bash
+python -m venv venv
+source venv/bin/activate   # Windows: venv\Scripts\activate
+```
+
+---
+
+### 3️⃣ Install Dependencies
+
+```bash
+pip install flask
+```
+
+---
+
+### 4️⃣ Run the Application
+
+```bash
+python app.py
+```
+
+Open in browser:
+
+```
+http://127.0.0.1:5000/
+```
+
+---
+
+## 🧠 Database Schema
+
+### 🩺 Doctors
+
+* id (Primary Key)
+* name
+* specialization
+
+### 🧑 Patients
+
+* id (Primary Key)
+* name
+* age
+
+### 📅 Appointments
+
+* id (Primary Key)
+* doctor_id (Foreign Key)
+* patient_id (Foreign Key)
+* time_slot
+
+---
+
+## ⚠️ Core Business Rule
+
+> A doctor cannot have more than one appointment at the same time slot.
+
+### ✔ Validation Logic:
+
+* Before booking, system checks:
+
+  * `doctor_id + time_slot`
+* If exists → ❌ Reject booking
+* Else → ✅ Confirm appointment
+
+---
+
+## 💻 Core Workflow
+
+1. User selects doctor, patient, and time slot
+2. System checks for conflicts in database
+3. If slot is available → appointment is stored
+4. If slot is taken → user is notified
+
+---
+
+## 🌐 UI Overview
+
+The interface is built with **Bootstrap 5**, ensuring:
+
+* Responsive layout
+* Clean dashboard design
+* Card-based forms
+* Table-based data display
+
+### Pages:
+
+* **Dashboard** → Overview & navigation
+* **Doctors Page** → Add/view doctors
+* **Patients Page** → Add/view patients
+* **Booking Page** → Schedule appointments
+
+---
+
+## 🧱 Development Approach
+
+This project follows a structured build process:
+
+1. Flask app & database setup
+2. Doctor & patient modules
+3. Appointment booking logic
+4. UI implementation
+5. Feature enhancements
+
+---
+
+## ⚠️ Common Issues
+
+* Forgetting to check slot conflicts
+* Mixing business logic with UI
+* Hardcoding instead of using database
+* Not using modular routes
+
+---
+
+## 📈 Future Improvements
+
+* 🔐 Authentication system
+* 📊 Analytics dashboard
+* 🌐 REST API version
+* ☁️ Cloud deployment
+* 🧠 AI-based scheduling optimization
+
+---
+
+## 🤝 Contribution
+
+Feel free to fork this repository and contribute improvements.
+
+---
+
+## 📌 Conclusion
+
+This project demonstrates:
+
+* Backend logic design
+* Conflict handling in scheduling
+* Modular Flask architecture
+* Real-world system thinking
+
+A strong addition to any **developer portfolio** when fully implemented.
+
+---
