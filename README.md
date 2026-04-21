@@ -1,4 +1,4 @@
-# 🏥 Hospital Appointment Dashboard System
+# 🏥 DOCTOR Appointment Dashboard System
 
 A **Flask-based Hospital Appointment Allotment System** designed to manage doctors, patients, and appointment scheduling efficiently through a clean web dashboard.
 
