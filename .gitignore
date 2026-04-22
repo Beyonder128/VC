@@ -26,6 +26,9 @@ instance/
 
 # ── Dev / temp scripts ────────────────────────────────────────────────────────
 check_syntax.py
+env_audit.py
+smtp_test.py
+email_test.py
 
 # ── VS Code ───────────────────────────────────────────────────────────────────
 .vscode/
