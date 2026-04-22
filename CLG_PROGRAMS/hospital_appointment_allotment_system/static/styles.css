@@ -1,0 +1,72 @@
+/* ── Global ──────────────────────────────────────────────────────────────── */
+body {
+  background-color: #f4f6fb;
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+}
+main { flex: 1; }
+
+/* ── Role-specific navbar colors ─────────────────────────────────────────── */
+.bg-doctor  { background: linear-gradient(135deg, #0d6efd, #0dcaf0) !important; }
+.bg-patient { background: linear-gradient(135deg, #198754, #20c997) !important; }
+
+/* ── Auth pages (login / register) ───────────────────────────────────────── */
+.auth-page  { background: linear-gradient(135deg, #e8f0fe 0%, #f0fdf4 100%); }
+.auth-card  { border-radius: 16px; }
+
+/* ── Hero banners ────────────────────────────────────────────────────────── */
+.hero-banner {
+  background: linear-gradient(135deg, #0d6efd 0%, #0dcaf0 100%);
+  box-shadow: 0 4px 20px rgba(13, 110, 253, 0.25);
+}
+.hero-banner-patient {
+  background: linear-gradient(135deg, #198754 0%, #20c997 100%);
+  box-shadow: 0 4px 20px rgba(25, 135, 84, 0.25);
+}
+.hero-avatar {
+  width: 64px; height: 64px;
+  background: rgba(255,255,255,0.2);
+  border-radius: 50%;
+  display: flex; align-items: center; justify-content: center;
+}
+
+/* ── Stat cards ──────────────────────────────────────────────────────────── */
+.stat-card {
+  border-radius: 12px;
+  transition: transform 0.18s ease, box-shadow 0.18s ease;
+  cursor: pointer;
+}
+.stat-card:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 8px 24px rgba(0,0,0,0.1) !important;
+}
+.stat-icon {
+  width: 56px; height: 56px;
+  border-radius: 12px;
+  display: flex; align-items: center; justify-content: center;
+  flex-shrink: 0;
+}
+
+/* ── Cards ───────────────────────────────────────────────────────────────── */
+.card          { border-radius: 12px; }
+.card-header   { border-radius: 12px 12px 0 0 !important; padding: 0.85rem 1.25rem; }
+
+/* ── Tables ──────────────────────────────────────────────────────────────── */
+.table thead th {
+  font-size: 0.8rem;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: #6c757d;
+  border-bottom-width: 1px;
+}
+.table tbody tr:last-child td { border-bottom: none; }
+
+/* ── Buttons & inputs ────────────────────────────────────────────────────── */
+.btn, .form-control, .form-select { border-radius: 8px; }
+.form-control:focus, .form-select:focus {
+  box-shadow: 0 0 0 0.2rem rgba(13,110,253,0.15);
+}
+
+/* ── Footer ──────────────────────────────────────────────────────────────── */
+footer { font-size: 0.82rem; }

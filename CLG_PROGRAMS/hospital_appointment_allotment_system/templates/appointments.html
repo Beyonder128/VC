@@ -1,0 +1,167 @@
+{% extends "base.html" %}
+{% block title %}Appointments — MediBook{% endblock %}
+
+{% block content %}
+
+<!-- ── Confirmed Appointments ─────────────────────────────────────────────── -->
+<div class="card border-0 shadow-sm mb-4">
+  <div class="card-header bg-white d-flex align-items-center justify-content-between">
+    <span class="fw-semibold">
+      <i class="bi bi-calendar2-check me-1 text-warning"></i>Confirmed Appointments
+    </span>
+    <span class="badge bg-warning text-dark">{{ appointments|length }}</span>
+  </div>
+
+  <div class="card-body p-0">
+    {% if appointments %}
+    <div class="table-responsive">
+      <table class="table table-hover align-middle mb-0">
+        <thead class="table-light">
+          <tr>
+            <th>#</th>
+            <th>Doctor</th>
+            <th>Specialization</th>
+            <th>Patient</th>
+            <th>Date</th>
+            <th>Time Slot</th>
+            <th class="text-center">Action</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for appt in appointments %}
+          <tr>
+            <td class="text-muted small">{{ appt.id }}</td>
+            <td class="fw-semibold">{{ appt.doctor_name }}</td>
+            <td>
+              <span class="badge bg-primary-subtle text-primary border border-primary-subtle">
+                {{ appt.specialization }}
+              </span>
+            </td>
+            <td>{{ appt.patient_name }}</td>
+            <td>
+              <span class="badge bg-secondary-subtle text-secondary border border-secondary-subtle">
+                <i class="bi bi-calendar3 me-1"></i>{{ appt.appt_date }}
+              </span>
+            </td>
+            <td>
+              <span class="badge bg-success-subtle text-success border border-success-subtle">
+                <i class="bi bi-clock me-1"></i>{{ appt.time_slot }}
+              </span>
+            </td>
+            <td class="text-center">
+              <form method="POST"
+                    action="{{ url_for('appointments.cancel', appointment_id=appt.id) }}"
+                    onsubmit="return confirm('Cancel this appointment?')">
+                <button type="submit" class="btn btn-sm btn-outline-danger">
+                  <i class="bi bi-x-circle me-1"></i>Cancel
+                </button>
+              </form>
+            </td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+    {% else %}
+    <div class="text-center text-muted py-5">
+      <i class="bi bi-calendar-x fs-1 d-block mb-2"></i>
+      No appointments booked yet.
+      <a href="{{ url_for('appointments.book') }}" class="d-block mt-2">Book one now →</a>
+    </div>
+    {% endif %}
+  </div>
+</div>
+
+<!-- ── Waiting List ────────────────────────────────────────────────────────── -->
+<div class="card border-0 shadow-sm">
+  <div class="card-header bg-white d-flex align-items-center justify-content-between">
+    <span class="fw-semibold">
+      <i class="bi bi-hourglass-split me-1 text-danger"></i>Waiting List
+    </span>
+    <span class="badge bg-danger">{{ waiting|length }}</span>
+  </div>
+
+  <div class="card-body p-0">
+    {% if waiting %}
+    <div class="table-responsive">
+      <table class="table table-hover align-middle mb-0">
+        <thead class="table-light">
+          <tr>
+            <th>Queue #</th>
+            <th>Doctor</th>
+            <th>Patient</th>
+            <th>Date</th>
+            <th>Time Slot</th>
+            <th>Reason</th>
+            <th class="text-center">Action</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for w in waiting %}
+          <tr>
+            <td>
+              <span class="badge bg-danger-subtle text-danger border border-danger-subtle">
+                #{{ loop.index }}
+              </span>
+            </td>
+            <td class="fw-semibold">{{ w.doctor_name }}</td>
+            <td>{{ w.patient_name }}</td>
+            <td>
+              <span class="badge bg-secondary-subtle text-secondary border border-secondary-subtle">
+                <i class="bi bi-calendar3 me-1"></i>{{ w.appt_date }}
+              </span>
+            </td>
+            <td>
+              <span class="badge bg-warning-subtle text-warning border border-warning-subtle">
+                <i class="bi bi-clock me-1"></i>{{ w.time_slot }}
+              </span>
+            </td>
+            <td>
+              {% if w.reason == 'future_date' %}
+                <span class="badge bg-info-subtle text-info border border-info-subtle">
+                  <i class="bi bi-clock-history me-1"></i>Awaiting Doctor Approval
+                </span>
+              {% else %}
+                <span class="badge bg-orange-subtle text-warning border border-warning-subtle"
+                      style="background-color:#fff3cd">
+                  <i class="bi bi-person-fill-slash me-1"></i>Slot Taken
+                </span>
+              {% endif %}
+            </td>
+            <td class="text-center">
+              {% if w.reason == 'future_date' %}
+                <!-- Only future_date entries show a Confirm button for the doctor -->
+                <form method="POST"
+                      action="{{ url_for('appointments.confirm_waiting_route', waiting_id=w.id) }}"
+                      onsubmit="return confirm('Confirm this appointment?')">
+                  <button type="submit" class="btn btn-sm btn-success">
+                    <i class="bi bi-check-circle me-1"></i>Confirm
+                  </button>
+                </form>
+              {% else %}
+                <span class="text-muted small">Auto-promote</span>
+              {% endif %}
+            </td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+    {% else %}
+    <div class="text-center text-muted py-4">
+      <i class="bi bi-check-circle fs-1 d-block mb-2 text-success"></i>
+      Waiting list is empty.
+    </div>
+    {% endif %}
+  </div>
+
+  {% if waiting %}
+  <div class="card-footer bg-white small text-muted">
+    <i class="bi bi-info-circle me-1"></i>
+    <strong>Slot Taken</strong> entries are auto-promoted on cancellation. &nbsp;|&nbsp;
+    <strong>Awaiting Doctor Approval</strong> entries must be manually confirmed by the doctor.
+  </div>
+  {% endif %}
+</div>
+
+{% endblock %}

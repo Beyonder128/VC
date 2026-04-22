@@ -1,0 +1,46 @@
+# ── Firebase credentials — NEVER commit this ─────────────────────────────────
+serviceAccountKey.json
+**/serviceAccountKey.json
+
+# ── Python ────────────────────────────────────────────────────────────────────
+__pycache__/
+**/__pycache__/
+*.py[cod]
+*.pyo
+*.pyd
+*.pyc
+
+# ── Virtual environments ──────────────────────────────────────────────────────
+.venv/
+venv/
+env/
+ENV/
+.env
+
+# ── Flask / SQLite leftovers ──────────────────────────────────────────────────
+database.db
+*.db
+*.sqlite
+*.sqlite3
+instance/
+
+# ── Dev / temp scripts ────────────────────────────────────────────────────────
+check_syntax.py
+
+# ── VS Code ───────────────────────────────────────────────────────────────────
+.vscode/
+
+# ── OS files ──────────────────────────────────────────────────────────────────
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# ── Logs & coverage ───────────────────────────────────────────────────────────
+*.log
+.coverage
+htmlcov/
+
+# ── Distribution / build ─────────────────────────────────────────────────────
+dist/
+build/
+*.egg-info/
