@@ -1,12 +1,32 @@
 from flask import Flask, session, redirect, url_for
+from flask_mail import Mail
+from dotenv import load_dotenv
+import os
+
 from routes.auth_routes        import auth_bp
 from routes.doctor_routes      import doctor_bp
 from routes.patient_routes     import patient_bp
 from routes.appointment_routes import appointment_bp
 
-app = Flask(__name__)
-app.secret_key = "hospital_secret_key_2024"
+# Load environment variables from .env file
+load_dotenv()
 
+app = Flask(__name__)
+app.secret_key = os.getenv("FLASK_SECRET_KEY", "hospital_secret_key_2024")
+
+# ── Flask-Mail configuration ──────────────────────────────────────────────────
+app.config["MAIL_SERVER"]         = os.getenv("MAIL_SERVER", "smtp.gmail.com")
+app.config["MAIL_PORT"]            = int(os.getenv("MAIL_PORT", 587))
+app.config["MAIL_USE_TLS"]         = os.getenv("MAIL_USE_TLS", "True") == "True"
+app.config["MAIL_USE_SSL"]         = False
+app.config["MAIL_USERNAME"]        = os.getenv("MAIL_USERNAME")
+app.config["MAIL_PASSWORD"]        = os.getenv("MAIL_PASSWORD")
+app.config["MAIL_DEFAULT_SENDER"]  = os.getenv("MAIL_DEFAULT_SENDER")
+
+# Initialize Flask-Mail
+mail = Mail(app)
+
+# Register blueprints
 app.register_blueprint(auth_bp)
 app.register_blueprint(doctor_bp)
 app.register_blueprint(patient_bp)
@@ -34,5 +54,4 @@ def patient_dash():
 
 
 if __name__ == "__main__":
-    # No init_db() needed — Firestore collections are created on first write
     app.run(debug=True)

@@ -35,6 +35,7 @@ WAITING      = "waiting_list"
 def register_user(username, password, role, extra):
     """
     Create user doc + role profile in one go.
+    extra must now include 'email' for all roles.
     Returns user_id (str) on success, None if username taken.
     """
     existing = (
@@ -50,6 +51,7 @@ def register_user(username, password, role, extra):
         "username":      username,
         "password_hash": generate_password_hash(password),
         "role":          role,
+        "email":         extra.get("email", ""),  # NEW: store email at user level
     })
     user_id = user_ref.id
 
@@ -362,3 +364,36 @@ def get_waiting_for_patient(patient_id):
             "reason":         data["reason"],
         })
     return sorted(results, key=lambda x: (x["appt_date"], x["time_slot"]))
+
+
+# ── Email lookup helpers ──────────────────────────────────────────────────────
+# These are used exclusively by email_service.py to resolve email addresses
+# from doctor_id / patient_id without coupling email logic to route code.
+
+def get_email_by_user_id(user_id: str) -> str:
+    """
+    Fetch the email address stored in the users collection for a given user_id.
+    Returns empty string if not found — email_service handles missing emails gracefully.
+    """
+    doc = db.collection(USERS).document(user_id).get()
+    if doc.exists:
+        return doc.to_dict().get("email", "")
+    return ""
+
+
+def get_doctor_email(doctor_id: str) -> str:
+    """Resolve a doctor's email from their doctors-collection document ID."""
+    doc = db.collection(DOCTORS).document(doctor_id).get()
+    if not doc.exists:
+        return ""
+    user_id = doc.to_dict().get("user_id", "")
+    return get_email_by_user_id(user_id)
+
+
+def get_patient_email(patient_id: str) -> str:
+    """Resolve a patient's email from their patients-collection document ID."""
+    doc = db.collection(PATIENTS).document(patient_id).get()
+    if not doc.exists:
+        return ""
+    user_id = doc.to_dict().get("user_id", "")
+    return get_email_by_user_id(user_id)

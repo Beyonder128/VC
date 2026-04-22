@@ -37,8 +37,9 @@ def register():
         confirm  = request.form.get("confirm_password", "")
         role     = request.form.get("role", "")
         name     = request.form.get("name", "").strip()
+        email    = request.form.get("email", "").strip()  # NEW: collect email
 
-        if not all([username, password, confirm, role, name]):
+        if not all([username, password, confirm, role, name, email]):
             flash("All fields are required.", "danger")
             return render_template("register.html")
 
@@ -50,19 +51,24 @@ def register():
             flash("Password must be at least 6 characters.", "danger")
             return render_template("register.html")
 
+        # Basic email validation
+        if "@" not in email or "." not in email:
+            flash("Please enter a valid email address.", "danger")
+            return render_template("register.html")
+
         if role == "doctor":
             specialization = request.form.get("specialization", "").strip()
             if not specialization:
                 flash("Specialization is required for doctors.", "danger")
                 return render_template("register.html")
-            extra = {"name": name, "specialization": specialization}
+            extra = {"name": name, "specialization": specialization, "email": email}
 
         elif role == "patient":
             age = request.form.get("age", "").strip()
             if not age or not age.isdigit() or not (1 <= int(age) <= 120):
                 flash("Valid age (1–120) is required for patients.", "danger")
                 return render_template("register.html")
-            extra = {"name": name, "age": age}
+            extra = {"name": name, "age": age, "email": email}
 
         else:
             flash("Invalid role selected.", "danger")
